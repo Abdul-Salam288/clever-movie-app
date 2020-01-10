@@ -20,12 +20,15 @@ def create(request):
     if request.method == 'POST':
         data = {
             'Name': request.POST.get('name'),
-            'Pictures': [{'url': request.POST.get('url')}],
+            'Pictures': [{'url': request.POST.get('url') or 'https://previews.123rf.com/images/pavelstasevich/pavelstasevich1811/pavelstasevich181101065/112815953-no-image-available-icon-flat-vector.jpg'}],
             'Rating': int(request.POST.get('rating')),
             'Notes': request.POST.get('notes')
         }
-
-        AT.insert(data)
+        try:
+            response = AT.insert(data)
+            messages.success(request, f"New movie added: {response['fields'].get('Name')}")
+        except Exception as e:
+            messages.warning(request, f"Got an error when trying to create a movie: {e}")
     return redirect('/')
 
 
@@ -37,5 +40,21 @@ def edit(request, movie_id):
             'Rating': int(request.POST.get('rating')),
             'Notes': request.POST.get('notes')
         }
-        AT.update(movie_id, data)
+
+        try:
+            response = AT.update(movie_id, data)
+            messages.success(request, f"Updated movie: {response['fields'].get('Name')}")
+        except Exception as e:
+            messages.warning(request, f"Got an error when trying to update a new movie: {e}")
+    
     return redirect('/')
+
+def delete(request, movie_id):
+    try:
+        movie_name = AT.get(movie_id)['fields'].get('Name')
+        AT.delete(movie_id)
+        messages.warning(request, f"Deleted movie: {movie_name}")
+    except Exception as e:
+        messages.warning(request, f"Got an error when trying to delete a movie: {e}")
+    return redirect("/")
+
